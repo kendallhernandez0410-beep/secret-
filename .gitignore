@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment Variables & Secrets (CRÍTICO: Nunca comitear credenciales)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Databases & Local Storage
+*.db
+*.db-journal
+*.sqlite
+data/
+backend/data/
+
+# Certificates & Private Keys
+docker/certs/*.key
+docker/certs/*.pfx
+docker/certs/*.pem
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build & OS
+dist/
+coverage/
+.DS_Store
+Thumbs.db

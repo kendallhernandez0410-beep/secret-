@@ -1,0 +1,49 @@
+name: SecureVault CI & Security Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-and-tests:
+    name: SAST, SCA & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Instalar Dependencias de Forma Determinista
+        working-directory: ./backend
+        run: npm ci
+
+      - name: SCA - Análisis de Dependencias Vulnerables (OWASP A06)
+        working-directory: ./backend
+        run: npm audit --audit-level=high
+
+      - name: Ejecutar Suite Criptográfica y Pruebas Unitarias
+        working-directory: ./backend
+        run: npm test
+        env:
+          NODE_ENV: test
+          ENCRYPTION_MASTER_KEY: c5c71132253448df7747c0e888c02f4a45fac60b41b31805bac9a0f59601a7fe
+          JWT_SECRET: 1b96f4d927901877c373785f2c9b4d0e6719fd62641c8c9165773705c220e031
+          DATABASE_PATH: ':memory:'
+
+      - name: Lint de Seguridad de Dockerfile (Hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: backend/Dockerfile
+          failure-threshold: warning

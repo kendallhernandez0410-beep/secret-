@@ -1,0 +1,53 @@
+services:
+  securevault_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: securevault_backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - ENCRYPTION_MASTER_KEY=${ENCRYPTION_MASTER_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_PATH=/app/data/securevault.db
+      - TRUST_PROXY=true
+      - ALLOWED_ORIGIN=https://localhost
+    volumes:
+      - vault_data:/app/data
+    networks:
+      - internal_network
+
+  securevault_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: securevault_frontend
+    restart: unless-stopped
+    networks:
+      - internal_network
+
+  securevault_proxy:
+    image: nginx:alpine
+    container_name: securevault_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/certs:/etc/nginx/certs:ro
+    depends_on:
+      - securevault_backend
+      - securevault_frontend
+    networks:
+      - internal_network
+
+volumes:
+  vault_data:
+    driver: local
+
+networks:
+  internal_network:
+    driver: bridge

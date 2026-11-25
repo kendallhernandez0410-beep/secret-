@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bóveda Principal — SecureVault</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span>🛡️</span> SecureVault <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">| Bóveda Cifrada</span>
+    </div>
+    <nav>
+      <span id="user-display" style="font-size: 0.9rem; color: var(--text-main);"></span>
+      <span id="role-badge"></span>
+      <a href="/admin.html" id="link-admin" style="display: none;">Panel Admin</a>
+      <button id="btn-logout" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Cerrar Sesión</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="card-title">
+        <span>Notas Privadas Cifradas (RF-04 & RF-05)</span>
+        <button id="btn-new-note" class="btn btn-primary">+ Nueva Nota Cifrada</button>
+      </div>
+
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Todas las notas son cifradas en reposo con <strong>AES-256-GCM</strong> (IV aleatorio de 12 bytes y AuthTag de 16 bytes). Los campos confidenciales se almacenan enmascarados y solo son descifrados bajo verificación estricta de tenencia.
+      </p>
+
+      <div id="alert-box" class="alert"></div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Dato Confidencial (Enmascarado)</th>
+              <th>Fecha Creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="notes-table-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted);">Cargando notas de la bóveda...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Crear / Ver Nota -->
+    <div id="modal-note" class="modal-overlay">
+      <div class="modal-content">
+        <button class="modal-close" id="btn-close-note-modal">&times;</button>
+        <h3 id="modal-note-title" style="margin-bottom: 1.5rem;">Nueva Nota Cifrada</h3>
+        
+        <form id="form-note">
+          <input type="hidden" id="note-id">
+          
+          <div class="form-group">
+            <label for="input-note-title">Título de la Nota</label>
+            <input type="text" id="input-note-title" required placeholder="Ej: Credenciales Base de Datos">
+          </div>
+
+          <div class="form-group">
+            <label for="input-sensitive-field">Campo Sensible a Enmascarar (RF-05)</label>
+            <input type="text" id="input-sensitive-field" required placeholder="Ej: Número de tarjeta o clave API secreta">
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Se mostrará como ********-1234 en listados públicos.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="input-note-content">Contenido Privado (Cifrado con AES-256-GCM)</label>
+            <textarea id="input-note-content" rows="4" required placeholder="Contenido confidencial..."></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-outline" id="btn-cancel-note">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-note">Cifrar y Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/notes.js"></script>
+</body>
+</html>

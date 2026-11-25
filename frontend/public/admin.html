@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración — SecureVault</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span>🛡️</span> SecureVault <span class="badge-admin">Admin Panel</span>
+    </div>
+    <nav>
+      <a href="/index.html">Bóveda de Notas</a>
+      <button id="btn-logout" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Cerrar Sesión</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="card-title">
+        <span>Usuarios Registrados (RF-07)</span>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID de Usuario</th>
+              <th>Correo Electrónico</th>
+              <th>Rol Verificado en Servidor</th>
+              <th>Fecha de Registro</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted);">Cargando usuarios...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Bitácora de Auditoría y Eventos de Seguridad (RF-07 / OWASP A09)</span>
+        <button id="btn-refresh-logs" class="btn btn-outline" style="font-size: 0.85rem;">Actualizar</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+        Registros append-only inmutables. Toda contraseña, token o secreto es sanitizado automáticamente como <code>[REDACTED_BY_AUDIT_POLICY]</code>.
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Tipo de Evento</th>
+              <th>IP Origen</th>
+              <th>ID Usuario</th>
+              <th>Detalles Sanitizados</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted);">Cargando eventos de seguridad...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "name": "securevault",
+  "version": "1.0.0",
+  "description": "Laboratorio de Seguridad de Aplicaciones (AppSec) Node.js - OWASP Top 10:2025",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --env-file=.env.test --test test/**/*.test.js"
+  },
+  "keywords": [
+    "security",
+    "owasp",
+    "appsec",
+    "cryptography",
+    "aes-256-gcm",
+    "argon2",
+    "rbac",
+    "idor-mitigation"
+  ],
+  "author": "AppSec Engineer & Senior Node.js Developer",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^4.6.7"
+  }
+}
