@@ -59,7 +59,7 @@ export async function registerUser({ email, password }, ipAddress = 'unknown', u
   const db = getDatabase();
 
   // Comprobar existencia previa de email
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) {
     const error = new Error('El correo electrónico ya está registrado.');
     // @ts-ignore
@@ -79,7 +79,7 @@ export async function registerUser({ email, password }, ipAddress = 'unknown', u
     VALUES (?, ?, ?, ?, ?, ?)
   `);
 
-  insertStmt.run(id, email, passwordHash, role, now, now);
+  await insertStmt.run(id, email, passwordHash, role, now, now);
 
   logSecurityEvent({
     eventType: AuditEventType.AUTH_REGISTER_SUCCESS,
@@ -105,7 +105,7 @@ export async function registerUser({ email, password }, ipAddress = 'unknown', u
 export async function loginUser({ email, password }, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
 
-  const user = db.prepare('SELECT id, email, password_hash, role FROM users WHERE email = ?').get(email);
+  const user = await db.prepare('SELECT id, email, password_hash, role FROM users WHERE email = ?').get(email);
 
   // Anti-timing leak: si el usuario no existe, ejecutamos un compare falso con hash ficticio
   if (!user) {
@@ -178,7 +178,7 @@ export async function loginUser({ email, password }, ipAddress = 'unknown', user
  */
 export async function requestPasswordReset(email, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
-  const user = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const user = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
 
   let rawTokenForDebug = undefined;
 
@@ -188,10 +188,10 @@ export async function requestPasswordReset(email, ipAddress = 'unknown', userAge
     const now = new Date().toISOString();
 
     // Invalidar tokens previos pendientes
-    db.prepare('UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0').run(user.id);
+    await db.prepare('UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0').run(user.id);
 
     // Insertar nuevo registro con hash SHA-256
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO password_resets (id, user_id, token_hash, expires_at, used, created_at)
       VALUES (?, ?, ?, ?, 0, ?)
     `).run(crypto.randomUUID(), user.id, tokenHash, expiresAt, now);
@@ -241,7 +241,7 @@ export async function resetPassword({ token, newPassword }, ipAddress = 'unknown
   const candidateHash = hashTokenSHA256(token);
 
   // Búsqueda del token por su hash
-  const record = db.prepare(`
+  const record = await db.prepare(`
     SELECT id, user_id, token_hash, expires_at, used
     FROM password_resets
     WHERE token_hash = ?
@@ -305,20 +305,11 @@ export async function resetPassword({ token, newPassword }, ipAddress = 'unknown
   const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
   const updatedAt = new Date().toISOString();
 
-  // Transacción atómica: actualizar password y marcar token como consumido
-  db.exec('BEGIN TRANSACTION;');
-  try {
-    db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
-      .run(newPasswordHash, updatedAt, record.user_id);
+  await db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
+    .run(newPasswordHash, updatedAt, record.user_id);
 
-    db.prepare('UPDATE password_resets SET used = 1 WHERE id = ?')
-      .run(record.id);
-
-    db.exec('COMMIT;');
-  } catch (err) {
-    db.exec('ROLLBACK;');
-    throw err;
-  }
+  await db.prepare('UPDATE password_resets SET used = 1 WHERE id = ?')
+    .run(record.id);
 
   logSecurityEvent({
     eventType: AuditEventType.AUTH_RESET_PASSWORD_SUCCESS,

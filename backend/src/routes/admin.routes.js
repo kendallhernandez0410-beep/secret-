@@ -13,16 +13,16 @@ router.use(requireRole(['ADMIN']));
 /**
  * RF-07: Listar todos los usuarios registrados (exclusivo para administradores)
  */
-router.get('/users', (req, res, next) => {
+router.get('/users', async (req, res, next) => {
   try {
     const db = getDatabase();
-    const users = db.prepare(`
+    const users = await db.prepare(`
       SELECT id, email, role, created_at, updated_at
       FROM users
       ORDER BY created_at DESC
     `).all();
 
-    logSecurityEvent({
+    await logSecurityEvent({
       eventType: AuditEventType.ADMIN_USER_LIST_ACCESSED,
       userId: req.user.id,
       ipAddress: req.ip,
@@ -38,14 +38,14 @@ router.get('/users', (req, res, next) => {
 /**
  * RF-07: Consultar bitácora de auditoría y eventos de seguridad
  */
-router.get('/audit-logs', (req, res, next) => {
+router.get('/audit-logs', async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
     const offset = Math.max(Number(req.query.offset) || 0, 0);
 
-    const logs = getSecurityAuditLogs(limit, offset);
+    const logs = await getSecurityAuditLogs(limit, offset);
 
-    logSecurityEvent({
+    await logSecurityEvent({
       eventType: AuditEventType.ADMIN_AUDIT_LOGS_ACCESSED,
       userId: req.user.id,
       ipAddress: req.ip,

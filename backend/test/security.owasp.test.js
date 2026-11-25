@@ -54,7 +54,7 @@ test('OWASP A03:2025 - Resistencia absoluta a SQL Injection (Prepared Statements
   }
 
   // Comprobar que la tabla users sigue existiendo y sin alteraciones
-  const tableCheck = db.prepare("SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='users'").get();
+  const tableCheck = await db.prepare("SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='users'").get();
   assert.equal(tableCheck.count, 1, 'La tabla users no debe ser alterada');
 });
 
@@ -97,7 +97,7 @@ test('OWASP A09:2025 - Sanitización de PII y Secreción en Bitácoras', async (
   // Simular evento con payload sensible intentando filtrarse a los logs
   const { logSecurityEvent, AuditEventType, getSecurityAuditLogs } = await import('../src/services/audit.service.js');
 
-  logSecurityEvent({
+  await logSecurityEvent({
     eventType: AuditEventType.AUTH_LOGIN_FAILURE,
     ipAddress: '192.168.1.100',
     userAgent: 'SecurityScanner/1.0',
@@ -109,7 +109,7 @@ test('OWASP A09:2025 - Sanitización de PII y Secreción en Bitácoras', async (
     },
   });
 
-  const logs = getSecurityAuditLogs(10, 0);
+  const logs = await getSecurityAuditLogs(10, 0);
   const failureLog = logs.find((l) => l.event_type === AuditEventType.AUTH_LOGIN_FAILURE && l.ip_address === '192.168.1.100');
   
   assert.ok(failureLog, 'El evento debe estar registrado');

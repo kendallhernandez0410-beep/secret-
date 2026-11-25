@@ -125,7 +125,7 @@ test('RF-02 - Login seguro y emisión de Cookie / Token JWT', async () => {
 
   // Crear y loguear cuenta de Administrador directamente en BD
   const adminId = 'admin-uuid-001';
-  db.prepare(`
+  await db.prepare(`
     INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
     VALUES (?, ?, ?, 'ADMIN', datetime('now'), datetime('now'))
   `).run(adminId, 'admin@securevault.local', '$2a$12$e8YkY6e8G6v5mZ1o2p3q4e5r6t7y8u9i0o1p2a3s4d5f6g7h8j9k0');

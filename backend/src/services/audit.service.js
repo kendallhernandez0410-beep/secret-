@@ -52,7 +52,7 @@ function sanitizeDetails(details = {}) {
  * @param {string} [params.userAgent]
  * @param {Record<string, any>} [params.details]
  */
-export function logSecurityEvent({ eventType, userId = null, ipAddress = 'unknown', userAgent = 'unknown', details = {} }) {
+export async function logSecurityEvent({ eventType, userId = null, ipAddress = 'unknown', userAgent = 'unknown', details = {} }) {
   try {
     const db = getDatabase();
     const id = crypto.randomUUID();
@@ -64,7 +64,7 @@ export function logSecurityEvent({ eventType, userId = null, ipAddress = 'unknow
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(id, eventType, userId, ipAddress, userAgent, sanitizedJson, createdAt);
+    await stmt.run(id, eventType, userId, ipAddress, userAgent, sanitizedJson, createdAt);
   } catch (error) {
     // Si la auditoría falla, emitir advertencia a stderr sin detener la app (fail-safe logging)
     console.error('CRITICAL: Falla al registrar evento en bitácora de auditoría:', error.message);
@@ -75,9 +75,9 @@ export function logSecurityEvent({ eventType, userId = null, ipAddress = 'unknow
  * Retorna la lista de eventos de auditoría para el panel de administración (RF-07).
  * @param {number} [limit=100]
  * @param {number} [offset=0]
- * @returns {Array<any>}
+ * @returns {Promise<Array<any>>}
  */
-export function getSecurityAuditLogs(limit = 100, offset = 0) {
+export async function getSecurityAuditLogs(limit = 100, offset = 0) {
   const db = getDatabase();
   const stmt = db.prepare(`
     SELECT id, event_type, user_id, ip_address, user_agent, details, created_at
@@ -86,5 +86,5 @@ export function getSecurityAuditLogs(limit = 100, offset = 0) {
     LIMIT ? OFFSET ?
   `);
 
-  return stmt.all(limit, offset);
+  return await stmt.all(limit, offset);
 }

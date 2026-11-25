@@ -25,6 +25,14 @@ const envSchema = z.object({
   DATABASE_PATH: z.string().default('./data/securevault.db'),
   TRUST_PROXY: z.string().transform((v) => v === 'true' || v === '1').default('false'),
   ALLOWED_ORIGIN: z.string().default('http://localhost:3000'),
+
+  // Configuración de MySQL
+  DB_CLIENT: z.enum(['mysql', 'sqlite']).default('mysql'),
+  DB_HOST: z.string().default('127.0.0.1'),
+  DB_PORT: z.coerce.number().int().default(3306),
+  DB_USER: z.string().default('root'),
+  DB_PASSWORD: z.string().default('1234'),
+  DB_NAME: z.string().default('securevault_db'),
 });
 
 // En entornos de testing permitimos llaves autogeneradas seguras si no existen

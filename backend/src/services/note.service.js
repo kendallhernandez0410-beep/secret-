@@ -31,9 +31,9 @@ export const updateNoteSchema = createNoteSchema.partial();
  * @param {string} input.sensitiveField
  * @param {string} [ipAddress]
  * @param {string} [userAgent]
- * @returns {{ id: string, title: string, sensitiveFieldMasked: string, createdAt: string }}
+ * @returns {Promise<{ id: string, title: string, sensitiveFieldMasked: string, createdAt: string }>}
  */
-export function createNote({ userId, title, content, sensitiveField }, ipAddress = 'unknown', userAgent = 'unknown') {
+export async function createNote({ userId, title, content, sensitiveField }, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -52,9 +52,9 @@ export function createNote({ userId, title, content, sensitiveField }, ipAddress
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
-  stmt.run(id, userId, title, encryptedString, sensitiveFieldMasked, now, now);
+  await stmt.run(id, userId, title, encryptedString, sensitiveFieldMasked, now, now);
 
-  logSecurityEvent({
+  await logSecurityEvent({
     eventType: AuditEventType.NOTE_CREATED,
     userId,
     ipAddress,
@@ -74,9 +74,9 @@ export function createNote({ userId, title, content, sensitiveField }, ipAddress
  * Lista las notas del usuario autenticado. Cada usuario SOLO ve sus propios registros.
  * 
  * @param {string} userId
- * @returns {Array<{ id: string, title: string, sensitiveFieldMasked: string, createdAt: string, updatedAt: string }>}
+ * @returns {Promise<Array<{ id: string, title: string, sensitiveFieldMasked: string, createdAt: string, updatedAt: string }>>}
  */
-export function listUserNotes(userId) {
+export async function listUserNotes(userId) {
   const db = getDatabase();
 
   // Consulta parametrizada estrictamente ligada al userId autenticado (Anti-IDOR)
@@ -87,7 +87,7 @@ export function listUserNotes(userId) {
     ORDER BY created_at DESC
   `);
 
-  const rows = stmt.all(userId);
+  const rows = await stmt.all(userId);
 
   return rows.map((r) => ({
     id: r.id,
@@ -107,27 +107,27 @@ export function listUserNotes(userId) {
  * @param {boolean} [isAdmin=false]
  * @param {string} [ipAddress]
  * @param {string} [userAgent]
- * @returns {{ id: string, title: string, content: string, sensitiveField: string, sensitiveFieldMasked: string, createdAt: string, updatedAt: string }}
+ * @returns {Promise<{ id: string, title: string, content: string, sensitiveField: string, sensitiveFieldMasked: string, createdAt: string, updatedAt: string }>}
  */
-export function getNoteById(noteId, userId, isAdmin = false, ipAddress = 'unknown', userAgent = 'unknown') {
+export async function getNoteById(noteId, userId, isAdmin = false, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
 
   let note = null;
 
   if (isAdmin) {
     // Si es administrador, puede consultar cualquier nota para propósitos de auditoría supervisada
-    note = db.prepare('SELECT * FROM notes WHERE id = ?').get(noteId);
+    note = await db.prepare('SELECT * FROM notes WHERE id = ?').get(noteId);
   } else {
     // Para usuarios estándar: scoped query obligatoria por userId
-    note = db.prepare('SELECT * FROM notes WHERE id = ? AND user_id = ?').get(noteId, userId);
+    note = await db.prepare('SELECT * FROM notes WHERE id = ? AND user_id = ?').get(noteId, userId);
   }
 
   if (!note) {
     // Verificar si la nota existe pero pertenece a otro usuario para detectar intento deliberado de IDOR
-    const existsOtherUser = db.prepare('SELECT user_id FROM notes WHERE id = ?').get(noteId);
+    const existsOtherUser = await db.prepare('SELECT user_id FROM notes WHERE id = ?').get(noteId);
 
     if (existsOtherUser && existsOtherUser.user_id !== userId) {
-      logSecurityEvent({
+      await logSecurityEvent({
         eventType: AuditEventType.ACCESS_DENIED_IDOR,
         userId,
         ipAddress,
@@ -146,7 +146,7 @@ export function getNoteById(noteId, userId, isAdmin = false, ipAddress = 'unknow
   const decryptedRaw = decryptAES256GCM(note.encrypted_content);
   const parsedPayload = JSON.parse(decryptedRaw);
 
-  logSecurityEvent({
+  await logSecurityEvent({
     eventType: AuditEventType.NOTE_READ,
     userId,
     ipAddress,
@@ -177,11 +177,11 @@ export function getNoteById(noteId, userId, isAdmin = false, ipAddress = 'unknow
  * @param {string} [ipAddress]
  * @param {string} [userAgent]
  */
-export function updateNote({ noteId, userId, title, content, sensitiveField }, ipAddress = 'unknown', userAgent = 'unknown') {
+export async function updateNote({ noteId, userId, title, content, sensitiveField }, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
 
   // 1. Obtener nota existente del usuario
-  const existing = db.prepare('SELECT * FROM notes WHERE id = ? AND user_id = ?').get(noteId, userId);
+  const existing = await db.prepare('SELECT * FROM notes WHERE id = ? AND user_id = ?').get(noteId, userId);
   if (!existing) {
     const error = new Error('Nota no encontrada o acceso no autorizado.');
     // @ts-ignore
@@ -211,9 +211,9 @@ export function updateNote({ noteId, userId, title, content, sensitiveField }, i
     WHERE id = ? AND user_id = ?
   `);
 
-  updateStmt.run(updatedTitle, encryptedString, updatedMasked, now, noteId, userId);
+  await updateStmt.run(updatedTitle, encryptedString, updatedMasked, now, noteId, userId);
 
-  logSecurityEvent({
+  await logSecurityEvent({
     eventType: AuditEventType.NOTE_UPDATED,
     userId,
     ipAddress,
@@ -237,11 +237,11 @@ export function updateNote({ noteId, userId, title, content, sensitiveField }, i
  * @param {string} [ipAddress]
  * @param {string} [userAgent]
  */
-export function deleteNote(noteId, userId, ipAddress = 'unknown', userAgent = 'unknown') {
+export async function deleteNote(noteId, userId, ipAddress = 'unknown', userAgent = 'unknown') {
   const db = getDatabase();
 
   const stmt = db.prepare('DELETE FROM notes WHERE id = ? AND user_id = ?');
-  const result = stmt.run(noteId, userId);
+  const result = await stmt.run(noteId, userId);
 
   if (result.changes === 0) {
     const error = new Error('Nota no encontrada o acceso no autorizado.');
@@ -250,7 +250,7 @@ export function deleteNote(noteId, userId, ipAddress = 'unknown', userAgent = 'u
     throw error;
   }
 
-  logSecurityEvent({
+  await logSecurityEvent({
     eventType: AuditEventType.NOTE_DELETED,
     userId,
     ipAddress,

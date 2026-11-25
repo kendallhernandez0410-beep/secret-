@@ -19,9 +19,9 @@ router.use(authenticateUser);
 /**
  * RF-04, RF-05: Listar notas del usuario autenticado (datos sensibles enmascarados)
  */
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const notes = listUserNotes(req.user.id);
+    const notes = await listUserNotes(req.user.id);
     res.json({ notes });
   } catch (error) {
     next(error);
@@ -31,7 +31,7 @@ router.get('/', (req, res, next) => {
 /**
  * RF-04, RF-05: Crear nueva nota privada cifrada con AES-256-GCM
  */
-router.post('/', (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const validated = createNoteSchema.safeParse(req.body);
     if (!validated.success) {
@@ -42,7 +42,7 @@ router.post('/', (req, res, next) => {
       });
     }
 
-    const note = createNote(
+    const note = await createNote(
       {
         userId: req.user.id,
         title: validated.data.title,
@@ -65,12 +65,12 @@ router.post('/', (req, res, next) => {
 /**
  * RF-04, RF-05: Obtener y descifrar nota específica (Control de tenencia / Anti-IDOR)
  */
-router.get('/:id', (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const noteId = req.params.id;
     const isAdmin = req.user.role === 'ADMIN';
 
-    const note = getNoteById(noteId, req.user.id, isAdmin, req.ip, req.headers['user-agent']);
+    const note = await getNoteById(noteId, req.user.id, isAdmin, req.ip, req.headers['user-agent']);
     res.json({ note });
   } catch (error) {
     next(error);
@@ -80,7 +80,7 @@ router.get('/:id', (req, res, next) => {
 /**
  * RF-04, RF-05: Actualizar nota privada (Re-cifrado con nuevo IV y Anti-IDOR)
  */
-router.put('/:id', (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const noteId = req.params.id;
     const validated = updateNoteSchema.safeParse(req.body);
@@ -92,7 +92,7 @@ router.put('/:id', (req, res, next) => {
       });
     }
 
-    const updated = updateNote(
+    const updated = await updateNote(
       {
         noteId,
         userId: req.user.id,
@@ -114,10 +114,10 @@ router.put('/:id', (req, res, next) => {
 /**
  * RF-04: Eliminar nota privada (Anti-IDOR)
  */
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const noteId = req.params.id;
-    const result = deleteNote(noteId, req.user.id, req.ip, req.headers['user-agent']);
+    const result = await deleteNote(noteId, req.user.id, req.ip, req.headers['user-agent']);
     res.json(result);
   } catch (error) {
     next(error);
