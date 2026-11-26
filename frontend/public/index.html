@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bóveda Principal — SecureVault</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="./css/styles.css">
+  <script>
+    // Redirección inmediata a login si no hay sesión activa
+    if (!sessionStorage.getItem('vault_user')) {
+      window.location.replace('./login.html');
+    }
+  </script>
 </head>
 <body>
   <header>
@@ -14,7 +20,7 @@
     <nav>
       <span id="user-display" style="font-size: 0.9rem; color: var(--text-main);"></span>
       <span id="role-badge"></span>
-      <a href="/admin.html" id="link-admin" style="display: none;">Panel Admin</a>
+      <a href="./admin.html" id="link-admin" style="display: none;">Panel Admin</a>
       <button id="btn-logout" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Cerrar Sesión</button>
     </nav>
   </header>
@@ -85,6 +91,6 @@
     </div>
   </main>
 
-  <script type="module" src="/js/notes.js"></script>
+  <script type="module" src="./js/notes.js"></script>
 </body>
 </html>

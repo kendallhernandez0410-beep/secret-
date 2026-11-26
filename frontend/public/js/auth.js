@@ -77,7 +77,7 @@ formLogin?.addEventListener('submit', async (e) => {
 
     // Guardar metadata no sensible de sesión en sessionStorage para la UI
     sessionStorage.setItem('vault_user', JSON.stringify(res.user));
-    window.location.href = '/index.html';
+    window.location.href = './index.html';
   } catch (error) {
     showAlert(error.message);
   }

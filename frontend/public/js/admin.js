@@ -10,7 +10,7 @@ const btnLogout = document.getElementById('btn-logout');
 const cachedUser = JSON.parse(sessionStorage.getItem('vault_user') || 'null');
 if (!cachedUser || cachedUser.role !== 'ADMIN') {
   alert('Acceso restringido: requiere privilegios de ADMINISTRADOR (RF-03)');
-  window.location.href = '/index.html';
+  window.location.href = './index.html';
 }
 
 btnLogout?.addEventListener('click', async () => {
@@ -18,7 +18,7 @@ btnLogout?.addEventListener('click', async () => {
     await apiRequest('/auth/logout', { method: 'POST' });
   } catch {}
   sessionStorage.removeItem('vault_user');
-  window.location.href = '/login.html';
+  window.location.href = './login.html';
 });
 
 async function loadAdminData() {

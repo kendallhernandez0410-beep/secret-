@@ -1,0 +1,8 @@
+# Configuración de despliegue en Netlify para SecureVault Frontend
+[build]
+  publish = "frontend/public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -17,7 +17,7 @@ const formNote = document.getElementById('form-note');
 // Verificar sesión
 const cachedUser = JSON.parse(sessionStorage.getItem('vault_user') || 'null');
 if (!cachedUser) {
-  window.location.href = '/login.html';
+  window.location.href = './login.html';
 } else {
   if (userDisplay) userDisplay.textContent = cachedUser.email;
   if (roleBadge) {
@@ -35,7 +35,7 @@ btnLogout?.addEventListener('click', async () => {
     await apiRequest('/auth/logout', { method: 'POST' });
   } catch {}
   sessionStorage.removeItem('vault_user');
-  window.location.href = '/login.html';
+  window.location.href = './login.html';
 });
 
 // Cargar notas (RF-04, RF-05)
