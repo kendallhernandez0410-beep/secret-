@@ -1,6 +1,7 @@
-# Configuración de despliegue en Netlify para SecureVault Frontend
+# Configuración de despliegue en Netlify para SecureVault React App
 [build]
-  publish = "frontend/public"
+  command = "cd frontend && npm install && npm run build"
+  publish = "frontend/dist"
 
 [[redirects]]
   from = "/*"
